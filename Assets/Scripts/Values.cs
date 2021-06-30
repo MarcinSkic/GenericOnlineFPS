@@ -6,6 +6,6 @@ public static class Values
 {
     public static class Namespace
     {
-        public const float Y_AXIS_ROTATION_MULTIPLAYER = 1.5f;
+        //public const float Y_AXIS_ROTATION_MULTIPLIER = 1.5f;
     }
 }
