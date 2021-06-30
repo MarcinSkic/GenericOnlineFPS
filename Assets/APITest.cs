@@ -12,25 +12,35 @@ using System;
 public class APITest : MonoBehaviour
 {
     public TMP_InputField responseText;
-    string moneyAPI = "http://localhost:5000/api/money";
-    string loginAPI = "http://localhost:5000/api/login";
+    string addkillAPI = "http://localhost:5000/api/addkill";
+    string adddeathAPI = "http://localhost:5000/api/adddeath";
+    // string loginAPI = "http://localhost:5000/api/login";
+    string mystatsAPI = "http://localhost:5000/api/mystats";
+    string statsbynameAPI = "http://localhost:5000/api/statsbyname";
     string token;
     public TMP_InputField nameField;
     public TMP_InputField passwordField;
+    public TMP_InputField targetNameField;
 
     TokenResponse tokenResponse;
-    MoneyData moneyData;
-
+    DeathData deathData;
+    KillData killData;
+    StatsData statsData;
+    StatsData targetStatsData;
 
     public void LogOut()
     {
         token = "";
         responseText.text = "Logged out.";
     }
-
-    public void MakeMoney()
+    public void AddKill()
     {
-        StartCoroutine(makeMoney());
+        StartCoroutine(addKill());
+    }
+
+    public void AddDeath()
+    {
+        StartCoroutine(addDeath());
     }
 
     string GetToken()
@@ -39,10 +49,40 @@ public class APITest : MonoBehaviour
         return theToken;
     }
 
-    public IEnumerator makeMoney()
+    public IEnumerator addKill()
     {
         WWWForm form = new WWWForm();
-        using (UnityWebRequest www = UnityWebRequest.Post(moneyAPI, form))
+        using (UnityWebRequest www = UnityWebRequest.Post(addkillAPI, form))
+        {
+            www.SetRequestHeader("Authorization", GetToken());
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Error!");
+                responseText.text = "Error!";
+            }
+            else
+            {
+                if (www.downloadHandler.text == "\"wrong token!\"")
+                {
+                    responseText.text = "You need to log in first!";
+                }
+                else
+                {
+                    Debug.Log(www.downloadHandler.text);
+                    Debug.Log("kills");
+                    killData = JsonUtility.FromJson<KillData>(www.downloadHandler.text);
+                    responseText.text = "You added 1 kill!\nYou now have " + killData.kills.ToString() + " kills.";
+                }
+            }
+        }
+    }
+
+    public IEnumerator addDeath()
+    {
+        WWWForm form = new WWWForm();
+        using (UnityWebRequest www = UnityWebRequest.Post(adddeathAPI, form))
         {
             www.SetRequestHeader("Authorization", GetToken());
             yield return www.SendWebRequest();
@@ -60,33 +100,82 @@ public class APITest : MonoBehaviour
                 }
                 else
                 {
-                    moneyData = JsonUtility.FromJson<MoneyData>(www.downloadHandler.text);
-                    responseText.text = "You made 1 money!\nYou now have " + moneyData.money.ToString() + " money.";
+                    Debug.Log(www.downloadHandler.text);
+                    deathData = JsonUtility.FromJson<DeathData>(www.downloadHandler.text);
+                    responseText.text = "You added 1 death!\nYou now have " + deathData.deaths.ToString() + " deaths.";
                 }
             }
         }
     }
 
-    public IEnumerator logIn()
+    public void DisplayMyStats()
     {
-        WWWForm form = new WWWForm();
-        form.AddField("name", "name");
-        form.AddField("password", "123");
-        //List<IMultipartFormSection> form = new List<IMultipartFormSection>();
-        //form.Add(new MultipartFormDataSection("name=foo&password=bar"));
-        UnityWebRequest www = UnityWebRequest.Post(loginAPI, form);
-        
-        yield return www.SendWebRequest();
+        StartCoroutine(displayMyStats());
+    }
 
-        if (www.result != UnityWebRequest.Result.Success)
+    public IEnumerator displayMyStats()
+    {
+
+        WWWForm form = new WWWForm();
+        using (UnityWebRequest www = UnityWebRequest.Get(mystatsAPI))
         {
-            responseText.text = www.error;
+            www.SetRequestHeader("Authorization", GetToken());
+            yield return www.SendWebRequest();
+            if(www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Error!");
+                responseText.text = "Error!";
+            }    
+            else
+            {
+                if (www.downloadHandler.text == "\"wrong token!\"")
+                {
+                    responseText.text = "You need to log in first!";
+                }
+                else
+                {
+                    Debug.Log(www.downloadHandler.text);
+                    statsData = JsonUtility.FromJson<StatsData>(www.downloadHandler.text);
+                    //responseText.text = statsData.ToString();
+                    responseText.text = "Name: " + statsData.name + "\nKills: " + statsData.kills + "\nDeaths: " + statsData.deaths;
+                }
+            }
         }
-        else
+    }
+
+    public void DisplayStatsByName()
+    {
+        StartCoroutine(displayStatsByname());
+    }
+
+    public IEnumerator displayStatsByname()
+    {
+
+        WWWForm form = new WWWForm();
+        using (UnityWebRequest www = UnityWebRequest.Get(statsbynameAPI))
         {
-            tokenResponse = JsonUtility.FromJson<TokenResponse>(www.downloadHandler.text);
-            token = tokenResponse.token;
-            responseText.text = "Logged in!";
+            www.SetRequestHeader("Authorization", GetToken());
+            www.SetRequestHeader("Name", targetNameField.text);
+            yield return www.SendWebRequest();
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Error!");
+                responseText.text = "Error!";
+            }
+            else
+            {
+                if (www.downloadHandler.text == "\"wrong target!\"")
+                {
+                    responseText.text = "Wrong target!";
+                }
+                else
+                {
+                    Debug.Log(www.downloadHandler.text);
+                    targetStatsData = JsonUtility.FromJson<StatsData>(www.downloadHandler.text);
+                    //responseText.text = targetStatsData.ToString();
+                    responseText.text = "Name: " + targetStatsData.name + "\nKills: " + targetStatsData.kills + "\nDeaths: " + targetStatsData.deaths;
+                }
+            }
         }
     }
 
@@ -98,16 +187,27 @@ public class APITest : MonoBehaviour
     public void UDPLogIn(string name, string password)
     {
         string response = SendAndGetUDP("login " + name + " " + password);
-        Debug.Log("101: " + response);
-        if(response.Length>15)
+        string[] responseparts = response.Split(' ');
+        if (response.Length>50 && responseparts[0]=="token:")
         {
-            token = response;
+            token = responseparts[1];
             responseText.text = "Welcome back, " + name+"!";
         }
         else
         {
             responseText.text = response;
         }
+    }
+
+    public void Register()
+    {
+        UDPRegister(nameField.text, passwordField.text);
+    }
+    public void UDPRegister(string name, string password)
+    {
+        string response = SendAndGetUDP("register " + name + " " + password);
+        string[] responseparts = response.Split(' ');
+        responseText.text = response;
     }
 
     private UdpClient client;
@@ -168,32 +268,30 @@ public class APITest : MonoBehaviour
         }
     }
 
-    void UDPTest()
-    {
-        try
-        {
-            byte[] sendBytes = Encoding.ASCII.GetBytes("Unity says hello");
-            client.Send(sendBytes, sendBytes.Length);
-            IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 5500);
-            byte[] receiveBytes = client.Receive(ref remoteEndPoint);
-            string receivedString = Encoding.ASCII.GetString(receiveBytes);
-            print("Message from server: " + receivedString);
-        }
-        catch(Exception e)
-        {
-            print("Exception thrown " + e.Message);
-        }
-    }
-
-
     private class TokenResponse
     {
         public string token;
     }
 
-    private class MoneyData
+    private class DeathData
     {
-        public double money;
+        public double deaths;
+    }
+
+    private class KillData
+    {
+        public double kills;
+    }
+
+    private class Stats
+    {
+        public double player;
+    }
+    private class StatsData
+    {
+        public string name;
+        public int kills;
+        public int deaths;
     }
 
 }
