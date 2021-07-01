@@ -10,14 +10,7 @@ public class HelpController : MonoBehaviour
     {
         if (Input.GetKeyDown("h"))
         {
-            if (helpObject.activeSelf.Equals(true))
-            {
-                helpObject.SetActive(false);
-            }
-            else
-            {
-                helpObject.SetActive(true);
-            }    
+            helpObject.SetActive(!helpObject.activeSelf); 
         }
     }
 }

@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class Values
+public class Player : MonoBehaviour
 {
-    public static class UI
-    {
+    
 
-    }
+    public PlayerServerData.Teams team;
+
 }

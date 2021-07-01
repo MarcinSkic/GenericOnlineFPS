@@ -31,26 +31,22 @@ public class PlayerLook : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown("p") || Input.GetKeyDown("[") || Input.GetKeyDown("]"))
-        {
-            if (Input.GetKeyDown("p"))
-            {
-                mouseSensitivity = defaultMouseSensitivity;
-            }
-            if (Input.GetKeyDown("["))
-            {
-                mouseSensitivity *= mouseSensitivityChangeMultiplier;
-            }
-            if (Input.GetKeyDown("]"))
-            {
-                mouseSensitivity /= mouseSensitivityChangeMultiplier;
-            }
-            mouseSensitivity = Mathf.Clamp(mouseSensitivity, mouseSensitivityMin, mouseSensitivityMax);
-        }
         
+        if (Input.GetKeyDown("p"))
+        {
+            mouseSensitivity = defaultMouseSensitivity;
+        }
+        if (Input.GetKeyDown("["))
+        {
+            mouseSensitivity = Mathf.Clamp(mouseSensitivity * mouseSensitivityChangeMultiplier, mouseSensitivityMin, mouseSensitivityMax);
+        }
+        if (Input.GetKeyDown("]"))
+        {
+            mouseSensitivity = Mathf.Clamp(mouseSensitivity / mouseSensitivityChangeMultiplier, mouseSensitivityMin, mouseSensitivityMax);
+        }
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime; // * Values.Namespace.Y_AXIS_ROTATION_MULTIPLIER ;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
