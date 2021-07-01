@@ -1,4 +1,4 @@
-# TowerDefense3D
-A little experiment on tower defense genre by adding physics to the mix :P
+# GenericOnlineFPS
+Simple online FPS
 
 Uses https://github.com/FilipTarajko/TowerDefenseServer as a server.
